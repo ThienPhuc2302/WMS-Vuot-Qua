@@ -1,13 +1,11 @@
 <?php
-/**
- * MODEL: mViTriKho
- * Use Case: UC 5.2 - Quản lý sơ đồ vị trí kệ tầng
- * Phụ trách: Võ Thị Tuyết Ngân
- * Bảng dữ liệu tương ứng: ViTriKho
- */
-require_once __DIR__ . '/ketnoi.php';
-
 class mViTriKho {
-    // Thao tác CSDL - Thành viên tự phát triển logic nghiệp vụ
+    private $conn;
+
+    public function __construct() {
+        // Tự động nhận kết nối MySQL từ Database.php, không cần require!
+        $this->conn = Database::getInstance()->getConnection();
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM TRUY VẤN SQL CỦA BẠN TỪ ĐÂY ===
 }
-?>

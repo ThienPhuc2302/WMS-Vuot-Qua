@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cDeNghiTieuHuy
- * Use Case: UC 6.3 - Lập đề nghị tiêu hủy hàng hỏng
- * Phụ trách: Lê Minh Thiện Phúc
- */
-require_once __DIR__ . '/../model/mDeNghiTieuHuy.php';
-
 class cDeNghiTieuHuy {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mDeNghiTieuHuy, không cần require!
+        $this->model = new mDeNghiTieuHuy();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vDeNghiTieuHuy.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

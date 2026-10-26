@@ -2,22 +2,14 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-$user = $_SESSION['user'] ?? [
-    'maNV' => 'NV011',
-    'hoTen' => 'Nguyễn Văn An',
-    'vaiTro' => 'QuanLyKho'
-];
-$currentPage = $page ?? ($_GET['page'] ?? 'vDieuPhoiXuatTP');
+$user = $_SESSION['user'] ?? null;
+if (!$user) {
+    header("Location: index.php?page=trangchu&error=unauthorized");
+    exit();
+}
 
-$roleDisplayNames = [
-    'Admin'       => 'Quản trị viên',
-    'QuanLyKho'   => 'Quản lý kho',
-    'NhanVienKho' => 'Nhân viên kho',
-    'QC'          => 'Bộ phận QC',
-    'KiemKe'      => 'Nhóm kiểm kê',
-    'BanGiamDoc'  => 'Ban giám đốc'
-];
-$displayRole = $roleDisplayNames[$user['vaiTro'] ?? ''] ?? ($user['vaiTro'] ?? 'Quản lý kho');
+$currentPage = $page ?? ($_GET['page'] ?? 'vDieuPhoiXuatTP');
+$displayRole = $user['vaiTro'] ?? 'Nhân viên';
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -25,6 +17,12 @@ $displayRole = $roleDisplayNames[$user['vaiTro'] ?? ''] ?? ($user['vaiTro'] ?? '
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiscuitWMS - Hệ Thống Quản Lý Kho</title>
+    <!-- CSRF Token & Kho dữ liệu WMS toàn cục cho toàn bộ hệ thống BiscuitWMS -->
+    <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <script>
+        window.csrfToken = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>';
+        window.wmsData = window.wmsData || {};
+    </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->

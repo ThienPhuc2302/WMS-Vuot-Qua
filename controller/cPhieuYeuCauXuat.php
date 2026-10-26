@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cPhieuYeuCauXuat
- * Use Case: UC 2.1 - Lập phiếu yêu cầu xuất kho
- * Phụ trách: Trần Thanh Toàn
- */
-require_once __DIR__ . '/../model/mPhieuYeuCauXuat.php';
-
 class cPhieuYeuCauXuat {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mPhieuYeuCauXuat, không cần require!
+        $this->model = new mPhieuYeuCauXuat();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vPhieuYeuCauXuat.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

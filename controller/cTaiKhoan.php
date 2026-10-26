@@ -1,10 +1,10 @@
 <?php
 /**
+ * =========================================================================
  * CONTROLLER: cTaiKhoan
- * Phụ trách: Quản lý tài khoản, Đăng nhập, Đăng xuất, Phân quyền
+ * Use Case: UC Quản lý tài khoản (Dành cho Quản trị viên - VT01)
+ * =========================================================================
  */
-require_once __DIR__ . '/../model/mTaiKhoan.php';
-
 class cTaiKhoan {
     private $model;
 
@@ -12,48 +12,13 @@ class cTaiKhoan {
         $this->model = new mTaiKhoan();
     }
 
-    // Xử lý đăng nhập
-    public function xuLyDangNhap($username, $password) {
-        if (empty($username)) {
-            return ['success' => false, 'message' => 'Vui lòng nhập tên đăng nhập!'];
-        }
-        $user = $this->model->kiemTraDangNhap($username, $password);
-        if ($user) {
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-            $_SESSION['user'] = [
-                'maNV'        => $user['maNV'],
-                'hoTen'       => $user['hoTen'],
-                'tenDangNhap' => $user['tenDangNhap'],
-                'vaiTro'      => $user['vaiTro']
-            ];
-            return ['success' => true, 'user' => $_SESSION['user']];
-        }
-        return ['success' => false, 'message' => 'Tài khoản hoặc mật khẩu không chính xác!'];
-    }
-
-    // Xử lý đăng xuất
-    public function xuLyDangXuat() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        unset($_SESSION['user']);
-        session_destroy();
-        return true;
-    }
-
-    // Lấy thông tin user hiện tại
-    public function getCurrentUser() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        return $_SESSION['user'] ?? null;
-    }
-
-    // Lấy danh sách tài khoản
+    /**
+     * Hiển thị danh sách tài khoản người dùng từ CSDL MySQL
+     */
     public function index() {
-        return $this->model->getAll();
+        $dsTaiKhoan = $this->model->getAll();
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vTaiKhoan.php';
+        include __DIR__ . '/../view/layout/footer.php';
     }
 }
-?>

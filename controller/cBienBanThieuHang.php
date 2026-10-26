@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cBienBanThieuHang
- * Use Case: UC 4.3 - Lập biên bản thiếu hàng khi xuất
- * Phụ trách: Trần Bích Thuận
- */
-require_once __DIR__ . '/../model/mBienBanThieuHang.php';
-
 class cBienBanThieuHang {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mBienBanThieuHang, không cần require!
+        $this->model = new mBienBanThieuHang();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vBienBanThieuHang.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

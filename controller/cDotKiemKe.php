@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cDotKiemKe
- * Use Case: UC 5.4 - Lập kế hoạch đợt kiểm kê
- * Phụ trách: Võ Thị Tuyết Ngân
- */
-require_once __DIR__ . '/../model/mDotKiemKe.php';
-
 class cDotKiemKe {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mDotKiemKe, không cần require!
+        $this->model = new mDotKiemKe();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vDotKiemKe.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

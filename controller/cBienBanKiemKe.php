@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cBienBanKiemKe
- * Use Case: UC 5.5 - Lập biên bản kiểm kê kho
- * Phụ trách: Võ Thị Tuyết Ngân
- */
-require_once __DIR__ . '/../model/mBienBanKiemKe.php';
-
 class cBienBanKiemKe {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mBienBanKiemKe, không cần require!
+        $this->model = new mBienBanKiemKe();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vBienBanKiemKe.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

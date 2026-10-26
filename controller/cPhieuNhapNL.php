@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cPhieuNhapNL
- * Use Case: UC 1.4 - Lập phiếu nhập kho nguyên liệu
- * Phụ trách: Trần Văn Sang
- */
-require_once __DIR__ . '/../model/mPhieuNhapNL.php';
-
 class cPhieuNhapNL {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mPhieuNhapNL, không cần require!
+        $this->model = new mPhieuNhapNL();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vPhieuNhapNL.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

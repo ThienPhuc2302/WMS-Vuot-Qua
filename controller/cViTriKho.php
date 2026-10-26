@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cViTriKho
- * Use Case: UC 5.2 - Quản lý sơ đồ vị trí kệ tầng
- * Phụ trách: Võ Thị Tuyết Ngân
- */
-require_once __DIR__ . '/../model/mViTriKho.php';
-
 class cViTriKho {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mViTriKho, không cần require!
+        $this->model = new mViTriKho();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vViTriKho.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

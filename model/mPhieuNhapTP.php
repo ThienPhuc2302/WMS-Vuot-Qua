@@ -1,25 +1,26 @@
 <?php
 /**
+ * =========================================================================
  * MODEL: mPhieuNhapTP
  * Use Case: UC 3.4 - Lập phiếu nhập kho thành phẩm
  * Phụ trách: Nguyễn Hữu Lộc
  * Bảng dữ liệu tương ứng: LenhDieuPhoiNhap, PhieuNhapKho, ViTriKho, TonKho, LoThanhPham
+ * =========================================================================
  */
-require_once __DIR__ . '/ketnoi.php';
+require_once __DIR__ . '/Database.php';
 
 class mPhieuNhapTP {
     private $conn;
 
     public function __construct() {
-        $db = new KetNoi();
-        $this->conn = $db->getConnection();
+        // Tự động nhận kết nối MySQL Singleton từ Database.php
+        $this->conn = Database::getInstance()->getConnection();
     }
 
     /**
-     * Lấy danh sách Lệnh điều phối tiếp nhận thành phẩm từ CSDL
+     * Lấy danh sách Lệnh điều phối tiếp nhận thành phẩm thực tế từ CSDL MySQL
      */
     public function getDanhSachLenhDieuPhoi() {
-        if (!$this->conn) return [];
         try {
             $sql = "
                 SELECT 
@@ -45,7 +46,10 @@ class mPhieuNhapTP {
                     pnk.maPNK,
                     pnk.ngayNhapThucTe,
                     pnk.maViTri AS viTriDaNhap,
-                    pnk.ghiChu AS ghiChuNhapKho
+                    pnk.ghiChu AS ghiChuNhapKho,
+                    pnk.slThucNhap,
+                    pnk.soLuongChenhLech,
+                    pnk.lyDoChenhLech
                 FROM LenhDieuPhoiNhap l
                 INNER JOIN LoThanhPham lotp ON l.maLo = lotp.maLoTP
                 INNER JOIN ThanhPham tp ON lotp.maTP = tp.maTP
@@ -64,53 +68,70 @@ class mPhieuNhapTP {
             $stmt = $this->conn->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch(PDOException $e) {
-            error_log("Lỗi getDanhSachLenhDieuPhoi: " . $e->getMessage());
-            return [];
+        } catch (PDOException $e) {
+            $errMsg = "Lỗi truy vấn danh sách lệnh điều phối: " . $e->getMessage();
+            error_log($errMsg);
+            throw new Exception($errMsg);
         }
     }
 
     /**
-     * Lấy danh sách Vị trí kệ khả dụng trong kho thành phẩm
+     * Lấy danh sách Vị trí kệ khả dụng trong kho thành phẩm từ CSDL MySQL
+     * Phân loại tự động dựa trên loaiKho = 'Kho Thành phẩm' trong bảng kho,
+     * không cố định mã kho để hỗ trợ đa kho thành phẩm (Kho TP 1, Kho TP 2...)
      */
-    public function getViTriKhoKhaDung($maKho = 'KHO_TP_01') {
-        if (!$this->conn) return [];
+    public function getViTriKhoKhaDung($maKho = null) {
         try {
             $sql = "
                 SELECT 
-                    maViTri,
-                    maKho,
-                    day,
-                    ke,
-                    tang,
-                    sucChuaKhaDung,
-                    trangThaiSuDung,
-                    trangThaiChuaHang
-                FROM ViTriKho
-                WHERE (maKho = 'KHO_TP_01' OR maKho = 'KHO-TP01' OR maKho LIKE '%TP%')
-                  AND maViTri NOT LIKE '%/%'
+                    v.maViTri,
+                    v.maKho,
+                    k.tenKho,
+                    k.loaiKho,
+                    v.day,
+                    v.ke,
+                    v.tang,
+                    v.sucChuaKhaDung,
+                    v.trangThaiSuDung,
+                    v.trangThaiChuaHang
+                FROM vitrikho v
+                INNER JOIN kho k ON v.maKho = k.maKho
+                WHERE k.loaiKho = 'Kho Thành phẩm'
+                  AND v.maViTri NOT LIKE '%/%'
+            ";
+
+            $params = [];
+            if (!empty($maKho)) {
+                $sql .= " AND v.maKho = :maKho";
+                $params[':maKho'] = $maKho;
+            }
+
+            $sql .= "
                 ORDER BY 
                     CASE 
-                        WHEN trangThaiSuDung = 'Trống' OR trangThaiSuDung = 'Còn trống' THEN 1 
-                        ELSE 2 
+                        WHEN v.trangThaiSuDung = 'Trống' OR v.trangThaiSuDung = 'Còn trống' THEN 1 
+                        WHEN v.trangThaiSuDung = 'Đang chứa' THEN 2
+                        ELSE 3 
                     END ASC,
-                    day ASC, ke ASC, tang ASC
+                    v.maKho ASC, v.day ASC, v.ke ASC, v.tang ASC
             ";
+
             $stmt = $this->conn->prepare($sql);
-            $stmt->execute();
+            $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch(PDOException $e) {
-            error_log("Lỗi getViTriKhoKhaDung: " . $e->getMessage());
-            return [];
+        } catch (PDOException $e) {
+            $errMsg = "Lỗi truy vấn vị trí kệ thành phẩm: " . $e->getMessage();
+            error_log($errMsg);
+            throw new Exception($errMsg);
         }
     }
 
     /**
      * Thực hiện Lưu Phiếu Nhập Kho Thành Phẩm (Giao dịch Transaction toàn vẹn CSDL)
      */
-    public function luuPhieuNhapKho($maLenhDieuPhoi, $maViTri, $maNV = 'NV006', $ghiChu = '', $slThucNhap = null, $lyDoChenhLech = null) {
-        if (!$this->conn) {
-            return ['success' => false, 'message' => 'Không thể kết nối cơ sở dữ liệu!'];
+    public function luuPhieuNhapKho($maLenhDieuPhoi, $maViTri, $maNV, $ghiChu = '', $slThucNhap = null, $lyDoChenhLech = null) {
+        if (empty($maNV)) {
+            return ['success' => false, 'message' => 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!'];
         }
 
         try {
@@ -130,16 +151,59 @@ class mPhieuNhapTP {
 
             if (!$lenh) {
                 $this->conn->rollBack();
-                return ['success' => false, 'message' => 'Không tìm thấy lệnh điều phối tiếp nhận!'];
+                return ['success' => false, 'message' => 'Không tìm thấy lệnh điều phối tiếp nhận trong CSDL!'];
             }
 
-            if ($lenh['trangThai'] === 'Hoàn tất nhập kho' || $lenh['trangThai'] === 'Hoàn tất nhập kho (Hao hụt)') {
+            // [CẢI TIẾN 1 - WHITELIST CHUẨN]: Chỉ cho phép lập phiếu khi lệnh ở trạng thái sẵn sàng tiếp nhận
+            $trangThaiHopLe = ['Chờ nhập kho', 'Chờ tiếp nhận'];
+            if (!in_array($lenh['trangThai'], $trangThaiHopLe)) {
                 $this->conn->rollBack();
-                return ['success' => false, 'message' => 'Lệnh điều phối này đã được lập phiếu nhập kho trước đó!'];
+                return [
+                    'success' => false, 
+                    'message' => "Lệnh điều phối này không ở trạng thái sẵn sàng tiếp nhận nhập kho (Trạng thái hiện tại: '{$lenh['trangThai']}')!"
+                ];
             }
 
-            // 2. Kiểm tra Vị trí kệ
-            $stmtViTri = $this->conn->prepare("SELECT * FROM ViTriKho WHERE maViTri = :maVT LIMIT 1");
+            // Chặn trùng lặp ở mức bảng PhieuNhapKho: Một lệnh chỉ được có duy nhất 1 phiếu nhập
+            $stmtCheckPNK = $this->conn->prepare("SELECT maPNK FROM PhieuNhapKho WHERE maLenhDieuPhoi = :maLenh LIMIT 1");
+            $stmtCheckPNK->execute([':maLenh' => $maLenhDieuPhoi]);
+            if ($stmtCheckPNK->fetch()) {
+                $this->conn->rollBack();
+                return ['success' => false, 'message' => 'Lệnh điều phối này đã tồn tại Phiếu nhập kho trong hệ thống!'];
+            }
+
+            // 2. Tính toán số lượng thực nhập & kiểm tra chênh lệch nghiệp vụ UC 3.2
+            if ($slThucNhap === null) {
+                $this->conn->rollBack();
+                return ['success' => false, 'message' => 'Số lượng thực nhận không được để trống!'];
+            }
+
+            $slThuc = (float)$slThucNhap;
+            $slPhanBo = (float)$lenh['soLuongPhanBo'];
+
+            if ($slThuc <= 0) {
+                $this->conn->rollBack();
+                return ['success' => false, 'message' => 'Số lượng thực nhận phải lớn hơn 0!'];
+            }
+
+            if ($slPhanBo > 0 && $slThuc > $slPhanBo) {
+                $this->conn->rollBack();
+                return ['success' => false, 'message' => 'Số lượng thực nhận không được vượt quá số lượng điều phối!'];
+            }
+
+            $soLuongChenhLech = max(0, $slPhanBo - $slThuc);
+
+            // BẮT BUỘC NHẬP LÝ DO NẾU CÓ HAO HỤT (TUYỆT ĐỐI KHÔNG TỰ BỊA)
+            if ($soLuongChenhLech > 0 && empty(trim($lyDoChenhLech ?? ''))) {
+                $this->conn->rollBack();
+                return ['success' => false, 'message' => 'Số lượng thực nhận nhỏ hơn điều phối. Bắt buộc phải nhập lý do chênh lệch/hao hụt!'];
+            }
+
+            // Thống nhất trạng thái chuẩn đồng bộ với CSDL seed và Giao diện: 'Hoàn tất nhập kho - Hao hụt'
+            $trangThaiLenh = ($soLuongChenhLech > 0) ? 'Hoàn tất nhập kho - Hao hụt' : 'Hoàn tất nhập kho';
+
+            // 3. Kiểm tra Vị trí kệ
+            $stmtViTri = $this->conn->prepare("SELECT * FROM ViTriKho WHERE maViTri = :maVT LIMIT 1 FOR UPDATE");
             $stmtViTri->execute([':maVT' => $maViTri]);
             $viTri = $stmtViTri->fetch(PDO::FETCH_ASSOC);
 
@@ -148,17 +212,56 @@ class mPhieuNhapTP {
                 return ['success' => false, 'message' => 'Vị trí kệ không hợp lệ!'];
             }
 
-            // 3. Tính toán số lượng thực nhập & chênh lệch theo Use Case 3.2 Luồng 5.1
-            $slPhanBo = (float)$lenh['soLuongPhanBo'];
-            $slThuc = ($slThucNhap !== null && (float)$slThucNhap > 0) ? (float)$slThucNhap : $slPhanBo;
-            $soLuongChenhLech = max(0, $slPhanBo - $slThuc);
-            $trangThaiLenh = ($soLuongChenhLech > 0) ? 'Hoàn tất nhập kho (Hao hụt)' : 'Hoàn tất nhập kho';
+            // [LỖI 1 ĐÃ SỬA]: Đối chiếu kho của vị trí với maKhoTiepNhan của lệnh điều phối (Ngăn chặn lưu sai kho)
+            if (!empty($lenh['maKhoTiepNhan']) && !empty($viTri['maKho']) && $viTri['maKho'] !== $lenh['maKhoTiepNhan']) {
+                $this->conn->rollBack();
+                return [
+                    'success' => false, 
+                    'message' => "Lỗi sai kho tiếp nhận: Lệnh này chỉ định tiếp nhận vào kho '{$lenh['maKhoTiepNhan']}', nhưng vị trí kệ '{$maViTri}' lại thuộc kho '{$viTri['maKho']}'!"
+                ];
+            }
 
-            // 4. Tự động sinh mã Phiếu Nhập Kho (PNK)
+            // [LỖI 3 ĐÃ SỬA]: Kiểm tra trạng thái sử dụng VÀ trạng thái chứa hàng (Khóa / Bảo trì)
+            if ($viTri['trangThaiSuDung'] !== 'Trống' && $viTri['trangThaiSuDung'] !== 'Còn trống') {
+                $this->conn->rollBack();
+                return ['success' => false, 'message' => "Vị trí kệ {$maViTri} hiện không trống ({$viTri['trangThaiSuDung']}). Vui lòng chọn kệ còn trống!"];
+            }
+
+            if (!empty($viTri['trangThaiChuaHang']) && $viTri['trangThaiChuaHang'] !== 'Khả dụng') {
+                $this->conn->rollBack();
+                return ['success' => false, 'message' => "Vị trí kệ {$maViTri} hiện đang ở trạng thái '{$viTri['trangThaiChuaHang']}' (không khả dụng để chứa hàng)!"];
+            }
+
+            // [LỖI 4 ĐÃ SỬA]: Kiểm tra sức chứa tối đa của kệ so với số lượng thực nhận
+            $sucChuaKhaDung = (float)($viTri['sucChuaKhaDung'] ?? 0);
+            if ($sucChuaKhaDung > 0 && $slThuc > $sucChuaKhaDung) {
+                $this->conn->rollBack();
+                return [
+                    'success' => false, 
+                    'message' => "Vượt quá sức chứa kệ: Số lượng thực nhận ({$slThuc}) vượt quá sức chứa tối đa của vị trí {$maViTri} ({$sucChuaKhaDung} Thùng)!"
+                ];
+            }
+
+            // 4. Sinh mã Phiếu Nhập Kho (PNK) tự động (Khóa bi quan FOR UPDATE MAX chống Race Condition)
             $datePrefix = date('Ymd');
-            $stmtCount = $this->conn->query("SELECT COUNT(*) FROM PhieuNhapKho WHERE maPNK LIKE 'PNK_TP_{$datePrefix}%'");
-            $count = (int)$stmtCount->fetchColumn() + 1;
-            $maPNK = 'PNK_TP_' . $datePrefix . '_' . str_pad($count, 3, '0', STR_PAD_LEFT);
+            $stmtMax = $this->conn->prepare("
+                SELECT maPNK 
+                FROM PhieuNhapKho 
+                WHERE maPNK LIKE :pattern 
+                ORDER BY maPNK DESC 
+                LIMIT 1 
+                FOR UPDATE
+            ");
+            $stmtMax->execute([':pattern' => "PNK_TP_{$datePrefix}%"]);
+            $lastCode = $stmtMax->fetchColumn();
+
+            $nextSeq = 1;
+            if ($lastCode) {
+                $parts = explode('_', $lastCode);
+                $lastSeq = (int)end($parts);
+                $nextSeq = $lastSeq + 1;
+            }
+            $maPNK = 'PNK_TP_' . $datePrefix . '_' . str_pad($nextSeq, 3, '0', STR_PAD_LEFT);
 
             // 5. INSERT vào bảng PhieuNhapKho
             $stmtInsert = $this->conn->prepare("
@@ -174,8 +277,8 @@ class mPhieuNhapTP {
                 ':nguoiLap'         => $maNV,
                 ':slThucNhap'       => $slThuc,
                 ':soLuongChenhLech' => $soLuongChenhLech,
-                ':lyDoChenhLech'    => $lyDoChenhLech ?: ($soLuongChenhLech > 0 ? 'Hao hụt vận chuyển bốc dỡ' : NULL),
-                ':ghiChu'           => $ghiChu ?: 'Nhập thành phẩm đạt chuẩn theo lệnh điều phối'
+                ':lyDoChenhLech'    => !empty(trim($lyDoChenhLech ?? '')) ? trim($lyDoChenhLech) : NULL,
+                ':ghiChu'           => !empty(trim($ghiChu ?? '')) ? trim($ghiChu) : NULL
             ]);
 
             // 6. CẬP NHẬT bảng LenhDieuPhoiNhap
@@ -189,7 +292,7 @@ class mPhieuNhapTP {
                 ':maLenh'    => $maLenhDieuPhoi
             ]);
 
-            // 7. CẬP NHẬT bảng LoThanhPham -> Tăng tồn kho thực nhập và chuyển trạng thái 'Đã lưu kho'
+            // 7. CẬP NHẬT bảng LoThanhPham -> Tăng tồn kho và chuyển trạng thái 'Đã lưu kho'
             $stmtUpdateLo = $this->conn->prepare("
                 UPDATE LoThanhPham 
                 SET soLuongTon = soLuongTon + :sl,
@@ -201,7 +304,7 @@ class mPhieuNhapTP {
                 ':maLo' => $lenh['maLo']
             ]);
 
-            // 8. CẬP NHẬT Tồn kho tại Vị trí kệ (Bảng TonKho)
+            // 8. CẬP NHẬT bảng TonKho
             $stmtCheckTK = $this->conn->prepare("
                 SELECT maTonKho, slTon FROM TonKho 
                 WHERE loaiHang = 'TP' AND maLo = :maLo AND maViTri = :maViTri 
@@ -258,7 +361,7 @@ class mPhieuNhapTP {
             ];
 
         } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
+            if ($this->conn && $this->conn->inTransaction()) {
                 $this->conn->rollBack();
             }
             error_log("Lỗi luuPhieuNhapKho: " . $e->getMessage());
@@ -270,10 +373,9 @@ class mPhieuNhapTP {
     }
 
     /**
-     * Lấy thông tin phiếu nhập đầy đủ để in A4
+     * Lấy thông tin phiếu nhập đầy đủ để phục vụ xem/in phiếu
      */
     public function getChiTietPhieuNhap($maPNK) {
-        if (!$this->conn) return null;
         try {
             $sql = "
                 SELECT 
@@ -301,9 +403,10 @@ class mPhieuNhapTP {
             $stmt = $this->conn->prepare($sql);
             $stmt->execute([':maPNK' => $maPNK]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch(PDOException $e) {
-            return null;
+        } catch (PDOException $e) {
+            $msg = "Lỗi truy vấn chi tiết phiếu nhập kho: " . $e->getMessage();
+            error_log($msg);
+            throw new Exception($msg);
         }
     }
 }
-?>

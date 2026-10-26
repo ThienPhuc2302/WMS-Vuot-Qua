@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cNhomThanhPham
- * Use Case: UC 3.1 - Quản lý nhóm thành phẩm
- * Phụ trách: Nguyễn Hữu Lộc
- */
-require_once __DIR__ . '/../model/mNhomThanhPham.php';
-
 class cNhomThanhPham {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mNhomThanhPham, không cần require!
+        $this->model = new mNhomThanhPham();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vNhomThanhPham.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

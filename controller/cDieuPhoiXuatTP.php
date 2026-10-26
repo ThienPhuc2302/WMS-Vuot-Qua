@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cDieuPhoiXuatTP
- * Use Case: UC 4.2 - Điều phối xuất kho thành phẩm
- * Phụ trách: Trần Bích Thuận
- */
-require_once __DIR__ . '/../model/mDieuPhoiXuatTP.php';
-
 class cDieuPhoiXuatTP {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mDieuPhoiXuatTP, không cần require!
+        $this->model = new mDieuPhoiXuatTP();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vDieuPhoiXuatTP.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

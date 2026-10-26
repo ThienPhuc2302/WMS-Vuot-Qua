@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cDieuPhoiNhapNL
- * Use Case: UC 1.3 - Điều phối tiếp nhận nguyên liệu
- * Phụ trách: Trần Văn Sang
- */
-require_once __DIR__ . '/../model/mDieuPhoiNhapNL.php';
-
 class cDieuPhoiNhapNL {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mDieuPhoiNhapNL, không cần require!
+        $this->model = new mDieuPhoiNhapNL();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vDieuPhoiNhapNL.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>

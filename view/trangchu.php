@@ -557,7 +557,7 @@ unset($_SESSION['login_error']);
                     <label class="block text-xs sm:text-sm font-bold text-stone-700 mb-1.5 uppercase tracking-wide">Mã tài khoản / Email vai trò</label>
                     <div class="relative">
                         <i class="fa-regular fa-user absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-base"></i>
-                        <input type="text" id="loginUsername" value="" placeholder="Nhập tài khoản (VD: admin, quanly, qc, thukho...)" 
+                        <input type="text" id="loginUsername" value="" placeholder="Nhập tài khoản (VD: admin, quanly, qc, nhanvienkho...)" 
                             autocomplete="off"
                             oninput="clearInputError(this)"
                             onkeydown="if(event.key === 'Enter') handleLoginSubmit()"
@@ -616,30 +616,15 @@ unset($_SESSION['login_error']);
         });
         <?php endif; ?>
 
-        // Xử lý khi đăng xuất: hiển thị toast và xóa sạch thông tin ghi nhớ
+        // Xử lý khi đăng xuất: hiển thị toast thông báo
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('logged_out') === '1') {
                 showToast('Đã đăng xuất ca làm việc thành công!', 'info');
-                try {
-                    localStorage.removeItem('currentUserRole');
-                } catch(e) {}
                 const cleanUrl = window.location.pathname + (urlParams.get('page') ? '?page=' + urlParams.get('page') : '');
                 window.history.replaceState({}, document.title, cleanUrl);
             }
         });
-
-        // Chỉ lưu vai trò, không lưu tên riêng
-        const ROLES_MAP = {
-            thukho_nl:     { role: 'Thủ kho Nguyên liệu', email: 'thukhonl@vuotqua.vn', badge: 'NL' },
-            kcs:           { role: 'Nhân viên KCS', email: 'kcs@vuotqua.vn', badge: 'KC' },
-            quanly_tp:     { role: 'Quản lý Kho Thành phẩm', email: 'quanlykhotp@vuotqua.vn', badge: 'QL' },
-            thukho_tp:     { role: 'Thủ kho Thành phẩm', email: 'thukhotp@vuotqua.vn', badge: 'TP' },
-            dieuphoi_xuat: { role: 'Điều phối xuất kho', email: 'dieuphoixuat@vuotqua.vn', badge: 'ĐP' },
-            admin:         { role: 'Quản trị hệ thống', email: 'admin@vuotqua.vn', badge: 'AD' }
-        };
-
-        let currentRole = null;
 
         function openLoginModal() {
             hideLoginError();
@@ -804,58 +789,18 @@ unset($_SESSION['login_error']);
             }, 3500);
         }
 
-        function handleLoginSuccess(r) {
-            currentRole = r;
-            closeLoginModal();
-            try {
-                localStorage.setItem('currentUserRole', JSON.stringify(r));
-            } catch(e) {}
-
-            showToast(`Đăng nhập ca trực: ${r.role}. Đang chuyển đến không gian làm việc...`);
-            setTimeout(() => {
-                window.location.href = 'index.php?page=vDieuPhoiXuatTP';
-            }, 500);
-        }
-
         function handleStartWorking() {
             openLoginModal();
         }
 
         function handleSearchBatch() {
             const code = document.getElementById('inputBatchCode').value.trim().toUpperCase();
-            const resBox = document.getElementById('batchResultBox');
             if (!code) {
-                showToast('Vui lòng nhập mã lô (VD: MALOTP01)');
+                showToast('Vui lòng nhập mã lô (VD: LOTP01)', 'error');
                 return;
             }
-
-            resBox.classList.remove('hidden');
-            if (code.includes('NL')) {
-                document.getElementById('resTitle').innerText = `Lô Bột Mì Hoa Ngọc Trời #${code}`;
-                document.getElementById('resStatus').innerText = 'KCS Đạt chuẩn';
-                document.getElementById('resNSX').innerText = '02/10/2026';
-                document.getElementById('resHSD').innerText = '02/10/2027';
-                document.getElementById('resLocation').innerText = 'Silo Bột Số 2';
-                document.getElementById('resQty').innerText = '5.000 kg';
-            } else {
-                document.getElementById('resTitle').innerText = `Lô Bánh Quy Bơ Danish #${code}`;
-                document.getElementById('resStatus').innerText = 'KCS Đạt chuẩn';
-                document.getElementById('resNSX').innerText = '15/10/2026';
-                document.getElementById('resHSD').innerText = '15/10/2027';
-                document.getElementById('resLocation').innerText = 'Khu Vực Kho TP';
-                document.getElementById('resQty').innerText = '1.250 hộp';
-            }
-            showToast(`Đã tìm thấy thông tin lô ${code}`);
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            toastMsg.innerText = msg;
-            toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
+            showToast('Vui lòng đăng nhập vào hệ thống để tra cứu chi tiết lô hàng từ CSDL!', 'info');
+            openLoginModal();
         }
     </script>
 </body>

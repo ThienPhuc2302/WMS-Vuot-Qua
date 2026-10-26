@@ -1,112 +1,129 @@
 <?php
+/**
+ * XỬ LÝ ĐĂNG NHẬP HỆ THỐNG WMS
+ * Xác thực tài khoản 100% từ CSDL MySQL (Bảng TaiKhoan & NhanVien)
+ */
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/model/ketnoi.php';
-$db = new KetNoi();
-$conn = $db->getConnection();
+require_once __DIR__ . '/model/Database.php';
+require_once __DIR__ . '/model/mTaiKhoan.php';
 
+// Bản đồ trang chuyển hướng mặc định theo mã vai trò từ CSDL (Chuẩn 6 vai trò dự án)
 $roleLanding = [
-    'Admin' => 'vTaiKhoan',
-    'QuanLyKho' => 'vDieuPhoiXuatTP',
+    'VT01'        => 'vTaiKhoan',            // Quản trị viên (Admin) -> Quản lý tài khoản
+    'Admin'       => 'vTaiKhoan',
+    'VT02'        => 'vDieuPhoiXuatTP',      // Quản lý kho -> Điều phối xuất thành phẩm
+    'QuanLyKho'   => 'vDieuPhoiXuatTP',
+    'VT03'        => 'vPhieuNhapTP',         // Nhân viên kho (Thủ kho) -> Lập phiếu nhập thành phẩm
     'NhanVienKho' => 'vPhieuNhapTP',
-    'QC' => 'vKiemDinhNL',
-    'KiemKe' => 'vBienBanKiemKe',
-    'BanGiamDoc' => 'vPhieuPheDuyet'
+    'VT05'        => 'vBienBanKiemKe',       // Nhóm kiểm kê -> Lập biên bản kiểm kê
+    'KiemKe'      => 'vBienBanKiemKe',
+    'VT06'        => 'vKiemDinhNL',          // Bộ phận QC -> Kiểm định nguyên liệu
+    'QC'          => 'vKiemDinhNL',
+    'VT07'        => 'vPhieuPheDuyet',       // Ban giám đốc -> Phê duyệt kiểm kê & tiêu hủy
+    'BanGiamDoc'  => 'vPhieuPheDuyet'
 ];
 
-// Bản đồ ánh xạ email mẫu thiết kế sang tên đăng nhập trong CSDL
-$emailAliases = [
-    'quanlykhotp@vuotqua.vn' => 'quanly',
-    'thukho'                 => 'nhanvienkho',
-    'thukhonl@vuotqua.vn'     => 'nhanvienkho',
-    'thukhotp@vuotqua.vn'     => 'nhanvienkho',
-    'kcs@vuotqua.vn'          => 'qc',
-    'dieuphoixuat@vuotqua.vn' => 'quanly',
-    'dieuphoi'               => 'quanly',
-    'admin@vuotqua.vn'        => 'admin',
-    'kiemke@vuotqua.vn'       => 'kiemke',
-    'giamdoc@vuotqua.vn'      => 'giamdoc',
-    'bgd@vuotqua.vn'          => 'giamdoc'
-];
 
-// Chỉ xử lý đăng nhập chuẩn qua Form / Modal POST
-
-// 2. Xử lý Form Đăng nhập (POST từ Modal trên Trang Chủ)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $rawInput = strtolower(trim($_POST['username'] ?? ''));
+    $rawInput = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
-
-    // Nếu để trống hoặc là email mặc định, chuyển về quanly
-    if (empty($rawInput)) {
-        $rawInput = 'quanly';
-    }
-    $usernameOrEmail = $emailAliases[$rawInput] ?? $rawInput;
 
     $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') 
         || (isset($_POST['is_ajax']) && $_POST['is_ajax'] === '1')
         || (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false);
 
-    if ($conn) {
-        // Tìm kiếm theo tên đăng nhập hoặc email hoặc ánh xạ
-        $stmt = $conn->prepare("
-            SELECT * FROM NhanVien 
-            WHERE (LOWER(tenDangNhap) = :u OR LOWER(email) = :u OR LOWER(tenDangNhap) = :alias) 
-              AND trangThai = 'Hoạt động' 
-            LIMIT 1
-        ");
-        $stmt->execute([
-            ':u' => $rawInput,
-            ':alias' => $usernameOrEmail
-        ]);
-        $user = $stmt->fetch();
-
-        // Kiểm tra mật khẩu (hỗ trợ cả mật khẩu CSDL hoặc pass mặc định 123456)
-        if ($user && ($user['matKhau'] === $password || $password === '123456' || empty($password))) {
-            $_SESSION['user'] = [
-                'maNV' => $user['maNV'],
-                'hoTen' => $user['hoTen'],
-                'tenDangNhap' => $user['tenDangNhap'],
-                'vaiTro' => $user['vaiTro']
-            ];
-            $landing = $roleLanding[$user['vaiTro']] ?? 'vDieuPhoiXuatTP';
-            
-            if ($isAjax) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Đăng nhập thành công!',
-                    'redirect' => "index.php?page={$landing}",
-                    'user' => [
-                        'hoTen' => $user['hoTen'],
-                        'vaiTro' => $user['vaiTro']
-                    ]
-                ]);
-                exit();
-            }
-
-            header("Location: index.php?page={$landing}");
+    // Kiểm tra không để trống
+    if (empty($rawInput) || empty($password)) {
+        $msg = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!';
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => $msg]);
             exit();
         }
-    }
-    
-    // Nếu sai thông tin đăng nhập: Trả về JSON nếu là AJAX, hoặc lưu session flash rồi chuyển về trang chủ (KHÔNG DÙNG ALERT)
-    if ($isAjax) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => false,
-            'message' => 'Tài khoản hoặc mật khẩu không chính xác! Vui lòng kiểm tra lại.'
-        ]);
+        $_SESSION['login_error'] = $msg;
+        header("Location: index.php?login_error=1");
         exit();
     }
 
-    $_SESSION['login_error'] = 'Tài khoản hoặc mật khẩu không chính xác! Vui lòng kiểm tra lại.';
-    header("Location: index.php?login_error=1");
-    exit();
+    // Xác thực thực tế qua Model
+    try {
+        $modelTK = new mTaiKhoan();
+        $user = $modelTK->kiemTraDangNhap($rawInput, $password);
+    } catch (Exception $e) {
+        // Ghi chi tiết kỹ thuật vào log hệ thống để phục vụ quản trị và bảo trì
+        error_log("LOGIN_ERROR: " . $e->getMessage());
+        // Hiển thị thông báo an toàn, ngăn lộ lọt thông tin nội bộ (OWASP A05)
+        $msg = 'Hệ thống gặp sự cố kết nối cơ sở dữ liệu! Vui lòng kiểm tra dịch vụ MySQL trong XAMPP hoặc liên hệ Quản trị viên.';
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => $msg]);
+            exit();
+        }
+        $_SESSION['login_error'] = $msg;
+        header("Location: index.php?login_error=1");
+        exit();
+    }
+
+    if ($user) {
+        // Đổi mới session ID sau khi xác thực thành công để chống tấn công cố định phiên (Session Fixation - OWASP)
+        session_regenerate_id(true);
+
+        // Đăng nhập thành công -> Lưu session thực tế từ CSDL
+        $_SESSION['user'] = [
+            'maNV'        => $user['maNV'],
+            'hoTen'       => $user['hoTen'],
+            'tenDangNhap' => $user['tenDangNhap'],
+            'email'       => $user['email'] ?? '',
+            'maVaiTro'    => $user['maVaiTro'],
+            'vaiTro'      => $user['vaiTro']
+        ];
+
+        $landing = $roleLanding[$user['maVaiTro']] ?? ($roleLanding[$user['vaiTro']] ?? null);
+        if (!$landing) {
+            $msg = "Lỗi phân quyền: Chưa cấu hình trang khởi đầu cho vai trò '{$user['vaiTro']}'!";
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit();
+            }
+            $_SESSION['login_error'] = $msg;
+            header("Location: index.php?login_error=1");
+            exit();
+        }
+
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success'  => true,
+                'message'  => 'Đăng nhập thành công!',
+                'redirect' => "index.php?page={$landing}",
+                'user'     => [
+                    'hoTen'    => $user['hoTen'],
+                    'vaiTro'   => $user['vaiTro'],
+                    'maVaiTro' => $user['maVaiTro']
+                ]
+            ]);
+            exit();
+        }
+
+        header("Location: index.php?page={$landing}");
+        exit();
+    } else {
+        $msg = 'Tên đăng nhập hoặc mật khẩu không chính xác! Vui lòng kiểm tra lại.';
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => $msg]);
+            exit();
+        }
+        $_SESSION['login_error'] = $msg;
+        header("Location: index.php?login_error=1");
+        exit();
+    }
 }
 
-// Mặc định chuyển về trang chủ index.php
+// Nếu không phải POST, chuyển về trang chủ
 header("Location: index.php");
 exit();
-?>

@@ -1,12 +1,17 @@
 <?php
-/**
- * CONTROLLER: cLoThanhPham
- * Use Case: UC 3.5 - Quản lý danh mục lô bánh thành phẩm
- * Phụ trách: Nguyễn Hữu Lộc
- */
-require_once __DIR__ . '/../model/mLoThanhPham.php';
-
 class cLoThanhPham {
-    // Điều hướng chức năng - Thành viên tự phát triển logic nghiệp vụ
+    private $model;
+
+    public function __construct() {
+        // Tự động nhận mLoThanhPham, không cần require!
+        $this->model = new mLoThanhPham();
+    }
+
+    public function index() {
+        include __DIR__ . '/../view/layout/header.php';
+        include __DIR__ . '/../view/vLoThanhPham.php';
+        include __DIR__ . '/../view/layout/footer.php';
+    }
+
+    // === 👉 BẮT ĐẦU VIẾT CÁC HÀM XỬ LÝ NGHIỆP VỤ CỦA BẠN TỪ ĐÂY ===
 }
-?>
