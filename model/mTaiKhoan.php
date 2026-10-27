@@ -4,8 +4,6 @@
  * Phụ trách: Quản lý tài khoản & Xác thực người dùng thực tế từ MySQL
  * Bảng dữ liệu tương ứng: TaiKhoan, NhanVien, VaiTro
  */
-require_once __DIR__ . '/Database.php';
-
 class mTaiKhoan {
     private $conn;
 

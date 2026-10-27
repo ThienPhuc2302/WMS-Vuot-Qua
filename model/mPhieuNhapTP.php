@@ -7,8 +7,6 @@
  * Bảng dữ liệu tương ứng: LenhDieuPhoiNhap, PhieuNhapKho, ViTriKho, TonKho, LoThanhPham
  * =========================================================================
  */
-require_once __DIR__ . '/Database.php';
-
 class mPhieuNhapTP {
     private $conn;
 
