@@ -1,4 +1,4 @@
-# 🏭 BiscuitWMS - Hệ Thống Điều Hành Quản Lý Kho Bánh Quy (Nhóm Vượt Qua)
+# 🏭 BiscuitWMS - Hệ Thống Quản lý Kho Trong Nhà máy Sản Xuất Bánh quy (Nhóm Vượt Qua)
 
 Dự án phần mềm Quản lý Kho Trong Nhà máy Sản Xuất Bánh quy (WMS) xây dựng theo kiến trúc MVC chuẩn, phân quyền theo 6 vai trò nghiêm ngặt theo đặc tả Báo cáo Giữa kỳ.
 
