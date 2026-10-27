@@ -7,49 +7,22 @@ $currentDot = isset($currentDot) ? $currentDot : [];
 $itemsFromDB = isset($kiemKeItems) ? $kiemKeItems : [];
 
 $maDotHienTai = $currentDot['maDotKiemKe'] ?? ('DOT-KK-' . $currentLoai . '-' . date('mY'));
-$tenKhoHienTai = ($currentDot['tenKho'] ?? 'Kho Nguyên Liệu') . ' (' . ($currentDot['maKho'] ?? 'KHO') . ')';
-$trangThaiDot = trim($currentDot['trangThai'] ?? 'Đang thực hiện');
+$tenKhoHienTai = ($currentDot['tenKho'] ?? 'Kho') . ' (' . ($currentDot['maKho'] ?? 'KHO') . ')';
+$trangThaiDot = trim($currentDot['trangThai'] ?? 'Đang kiểm đếm');
 
-// Kiểm tra xem đợt này đã hoàn tất chưa (so sánh không phân biệt hoa thường)
 $isCompleted = (strcasecmp($trangThaiDot, 'Đã hoàn tất') === 0 || strpos($trangThaiDot, 'Hoàn tất') !== false);
 ?>
 
 <style>
 @media print {
-    /* Đổi khổ giấy sang dạng ngang (Landscape) để chứa đủ tất cả các cột */
-    @page {
-        size: A4 landscape;
-        margin: 10mm;
-    }
+    @page { size: A4 landscape; margin: 10mm; }
     body * { visibility: hidden; }
     #printableArea, #printableArea * { visibility: visible; }
-    #printableArea { 
-        position: absolute; 
-        left: 0; 
-        top: 0; 
-        width: 100%; 
-        margin: 0; 
-        padding: 0; 
-        background: white !important; 
-    }
+    #printableArea { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white !important; }
     .no-print, input, button { display: none !important; }
-    
-    /* Thu nhỏ khoảng cách bảng để tất cả các cột tự động co giãn vừa vặn màn hình in */
-    table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-    }
-    th, td {
-        padding: 6px 8px !important;
-        font-size: 11px !important;
-    }
-    td input[type="number"] { 
-        border: none !important; 
-        background: transparent !important; 
-        text-align: right; 
-        font-weight: bold; 
-        padding: 0; 
-    }
+    table { width: 100% !important; border-collapse: collapse !important; }
+    th, td { padding: 6px 8px !important; font-size: 11px !important; }
+    td input[type="number"] { border: none !important; background: transparent !important; text-align: right; font-weight: bold; padding: 0; }
 }
 </style>
 
@@ -60,7 +33,6 @@ $isCompleted = (strcasecmp($trangThaiDot, 'Đã hoàn tất') === 0 || strpos($t
             <p class="text-sm text-slate-500 mt-1">Ghi nhận số lượng kiểm đếm thực tế tại kho và đối chiếu chênh lệch sổ sách</p>
         </div>
 
-        <!-- 2 nút tab Kiểm kê nguyên liệu / Kiểm kê thành phẩm -->
         <div class="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-sm text-xs no-print">
             <a href="index.php?page=vBienBanKiemKe&loai=NL" class="px-3.5 py-1.5 rounded-lg font-semibold whitespace-nowrap transition-all <?= ($currentLoai === 'NL') ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100' ?>">
                 Kiểm kê nguyên liệu
@@ -71,7 +43,6 @@ $isCompleted = (strcasecmp($trangThaiDot, 'Đã hoàn tất') === 0 || strpos($t
         </div>
     </div>
 
-    <!-- Thông tin đợt kiểm kê -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
             <div class="flex items-center justify-between mb-1">
@@ -111,7 +82,6 @@ $isCompleted = (strcasecmp($trangThaiDot, 'Đã hoàn tất') === 0 || strpos($t
         </div>
     </div>
 
-    <!-- Bảng kiểm kê chi tiết -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-6 py-3.5 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
@@ -153,7 +123,6 @@ $isCompleted = (strcasecmp($trangThaiDot, 'Đã hoàn tất') === 0 || strpos($t
                     <i class="fa-solid fa-print"></i>
                     <span>In biên bản</span>
                 </button>
-                <!-- Nút Hoàn tất kiểm kê tự động xám và khóa lại nếu đợt đã hoàn tất -->
                 <button type="button" id="btnHoanTat" <?= $isCompleted ? 'disabled' : '' ?> 
                     class="px-5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 <?= $isCompleted ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-amber-600 hover:bg-amber-700 text-white shadow-sm cursor-pointer' ?>">
                     <i class="fa-solid fa-check"></i>
@@ -175,6 +144,7 @@ var inventoryData = rawItems.map(function(item) {
     return {
         maTonKho: item.maTonKho,
         maLo: item.maLo,
+        maViTri: item.maViTri,
         maHang: item.maHang,
         tenHang: item.tenHang,
         donViTinh: item.donViTinh || '',
@@ -225,7 +195,6 @@ function renderTable() {
             badgeHTML = '<span class="inline-flex items-center gap-2 text-xs font-semibold text-slate-800"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>' + chenhLech.toLocaleString() + ' (Hao hụt)</span>';
         }
 
-        // Nếu đợt đã hoàn tất, khóa các ô input lại không cho sửa nữa
         var disabledAttr = isCompleted ? 'disabled' : '';
         var inputBgStyle = isCompleted ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900';
 
@@ -249,9 +218,7 @@ function renderTable() {
     });
 
     renderPagination(totalPages, currentPage);
-    if (!isCompleted) {
-        attachInputEvents();
-    }
+    if (!isCompleted) attachInputEvents();
 }
 
 function renderPagination(totalPages, page) {
@@ -313,7 +280,7 @@ if (btnHoanTat && !isCompleted) {
             return;
         }
 
-        if (!confirm('Bạn có chắc chắn muốn hoàn tất biên bản kiểm kê này không?')) {
+        if (!confirm('Bạn có chắc chắn muốn hoàn tất biên bản kiểm kê và gửi chờ Ban Giám đốc phê duyệt không?')) {
             return;
         }
 
@@ -339,7 +306,7 @@ if (btnHoanTat && !isCompleted) {
         })
         .catch(function(err) {
             console.error(err);
-            alert('Đã xảy ra lỗi kết nối!');
+            alert('Đã xảy ra lỗi kết nối khi lưu biên bản!');
         });
     });
 }
