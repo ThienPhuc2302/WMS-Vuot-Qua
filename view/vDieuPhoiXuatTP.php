@@ -237,14 +237,9 @@
 
             <!-- Cảnh báo thiếu tồn kho nếu không đủ hàng (Alternative flow 4.1) -->
             <?php if (!$isDuTonToanBo && !$isDaDieuPhoi): ?>
-                <div class="mx-6 mt-4 p-4 rounded-xl border border-rose-200 bg-rose-50/80 text-rose-900 flex items-start gap-3">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-600 text-lg mt-0.5 shrink-0"></i>
-                    <div class="text-xs space-y-1">
-                        <strong class="font-bold text-sm text-rose-800">CẢNH BÁO: TỔNG TỒN KHẢ DỤNG KHÔNG ĐỦ ĐÁP ỨNG PHIẾU XUẤT!</strong>
-                        <p class="text-rose-700 leading-relaxed">
-                            Theo quy định quản lý kho (Use Case 4.1), hệ thống tạm thời vô hiệu hóa nút <em>"Xác nhận điều phối xuất kho"</em> đối với phiếu yêu cầu này do không đủ số lượng thành phẩm đạt chuẩn. Phiếu yêu cầu được giữ nguyên trạng thái <strong>"Chờ điều phối"</strong>.
-                        </p>
-                    </div>
+                <div class="mx-6 mt-4 p-3.5 rounded-xl border border-rose-200 bg-rose-50/80 text-rose-900 flex items-center gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base shrink-0"></i>
+                    <strong class="font-bold text-sm text-rose-800">CẢNH BÁO: TỔNG TỒN KHẢ DỤNG KHÔNG ĐỦ ĐÁP ỨNG PHIẾU XUẤT!</strong>
                 </div>
             <?php endif; ?>
 
