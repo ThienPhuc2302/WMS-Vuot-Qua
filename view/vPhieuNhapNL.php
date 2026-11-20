@@ -2,8 +2,9 @@
 /**
  * VIEW: vPhieuNhapNL.php
  * Use Case: UC 3.2 - Lập phiếu nhập nguyên liệu
- * Phụ trách: Thành viên nhóm (Giao diện đồng bộ Master chuẩn ERP)
+ * Phụ trách: Trần Văn Sang
  */
+$isDaHoanTat = (isset($chiTiet['trangThai']) && $chiTiet['trangThai'] === 'Hoàn tất nhập kho');
 ?>
 <div class="max-w-7xl mx-auto space-y-5 pb-0">
     <div>
@@ -11,7 +12,27 @@
         <p class="text-sm text-slate-500 mt-1">Tiếp nhận lệnh điều phối nguyên liệu từ nhà cung cấp và chỉ định vị trí kệ lưu trữ</p>
     </div>
 
-    <!-- Danh sách lệnh điều phối nhập nguyên liệu (Tìm kiếm & Phân trang chuẩn ERP) -->
+    <?php if (isset($thongBao)): ?>
+        <div class="p-4 rounded-lg text-sm font-semibold <?= $thongBao['type'] === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200' ?>">
+            <?= htmlspecialchars($thongBao['msg']) ?>
+        </div>
+    <?php endif; ?>
+
+    <!-- Banner Thông báo Thông minh khi chọn Lệnh đã hoàn tất -->
+    <?php if ($isDaHoanTat): ?>
+        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-emerald-800 shadow-sm">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-xl"></i>
+                <div>
+                    <strong class="font-bold text-sm block">Lệnh điều phối [<?= htmlspecialchars($chiTiet['maLenhDieuPhoi']) ?>] đã hoàn tất nhập kho!</strong>
+                    <span class="text-xs text-emerald-700">Dữ liệu lô hàng đã được cập nhật vào thẻ kho và vị trí lưu trữ. Biểu mẫu đang ở chế độ xem (Read-only).</span>
+                </div>
+            </div>
+            <span class="px-3 py-1 bg-emerald-600 text-white font-bold text-xs rounded-full">Chế độ Chỉ Xem</span>
+        </div>
+    <?php endif; ?>
+
+    <!-- Danh sách lệnh điều phối nhập nguyên liệu -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-6 py-3.5 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
@@ -19,14 +40,14 @@
                 <h2 class="text-base font-bold text-slate-900 uppercase tracking-tight">DANH SÁCH LỆNH ĐIỀU PHỐI TIẾP NHẬN NGUYÊN LIỆU</h2>
             </div>
             
-            <!-- Thanh tìm kiếm lệnh điều phối -->
-            <div class="relative w-full sm:w-72">
+            <form method="GET" class="relative w-full sm:w-72">
+                <input type="hidden" name="page" value="vPhieuNhapNL">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </span>
-                <input type="text" placeholder="Tìm mã lệnh, mã lô, nguyên liệu..." 
+                <input type="text" name="search" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" placeholder="Tìm mã lệnh, mã lô, nguyên liệu..." 
                     class="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500">
-            </div>
+            </form>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse erp-table">
@@ -41,61 +62,43 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr class="cursor-pointer bg-slate-100 font-medium">
-                        <td class="py-3.5 px-6 font-semibold text-slate-900">LDP-NL-2610-01</td>
-                        <td class="py-3.5 px-4">LONL20261021001</td>
-                        <td class="py-3.5 px-4">Bột mì đa dụng thượng hạng số 8</td>
-                        <td class="py-3.5 px-4 text-slate-600">Kho Nguyên Liệu Khô 1</td>
-                        <td class="py-3.5 px-4 text-right font-semibold">5,000 Kg</td>
-                        <td class="py-3.5 px-6">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-800 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>Chờ nhập kho</span>
-                        </td>
-                    </tr>
-                    <tr class="cursor-pointer hover:bg-slate-50">
-                        <td class="py-3.5 px-6 font-semibold text-slate-900">LDP-NL-2610-02</td>
-                        <td class="py-3.5 px-4">LONL20261021002</td>
-                        <td class="py-3.5 px-4">Bơ lạt Anchor New Zealand</td>
-                        <td class="py-3.5 px-4 text-slate-600">Kho Nguyên Liệu Lạnh 2</td>
-                        <td class="py-3.5 px-4 text-right font-semibold">2,000 Kg</td>
-                        <td class="py-3.5 px-6">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-800 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>Chờ nhập kho</span>
-                        </td>
-                    </tr>
-                    <tr class="cursor-pointer hover:bg-slate-50">
-                        <td class="py-3.5 px-6 font-semibold text-slate-900">LDP-NL-2610-03</td>
-                        <td class="py-3.5 px-4">LONL20261020001</td>
-                        <td class="py-3.5 px-4">Đường tinh luyện Biên Hòa Pure</td>
-                        <td class="py-3.5 px-4 text-slate-600">Kho Nguyên Liệu Khô 1</td>
-                        <td class="py-3.5 px-4 text-right font-semibold">3,500 Kg</td>
-                        <td class="py-3.5 px-6">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-800 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>Hoàn tất nhập kho</span>
-                        </td>
-                    </tr>
+                    <?php if (!empty($dsDieuPhoi)): ?>
+                        <?php foreach ($dsDieuPhoi as $dp): 
+                            $isSelected = (isset($chiTiet['maLenhDieuPhoi']) && $chiTiet['maLenhDieuPhoi'] == $dp['maLenhDieuPhoi']);
+                        ?>
+                            <tr onclick="window.location.href='index.php?page=vPhieuNhapNL&maLenhDieuPhoi=<?= $dp['maLenhDieuPhoi'] ?>'" 
+                                class="cursor-pointer <?= $isSelected ? 'bg-amber-50/70 font-medium' : 'hover:bg-slate-50' ?>">
+                                <td class="py-3.5 px-6 font-semibold text-slate-900"><?= htmlspecialchars($dp['maLenhDieuPhoi']) ?></td>
+                                <td class="py-3.5 px-4"><?= htmlspecialchars($dp['maLo']) ?></td>
+                                <td class="py-3.5 px-4"><?= htmlspecialchars($dp['tenNL']) ?></td>
+                                <td class="py-3.5 px-4 text-slate-600"><?= htmlspecialchars($dp['tenKho'] ?? 'Kho Nguyên Liệu') ?></td>
+                                <td class="py-3.5 px-4 text-right font-semibold"><?= number_format($dp['soLuongPhanBo'], 0) ?> <?= htmlspecialchars($dp['donViTinh'] ?? 'Kg') ?></td>
+                                <td class="py-3.5 px-6">
+                                    <?php if ($dp['trangThai'] === 'Hoàn tất nhập kho'): ?>
+                                        <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-800 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>Hoàn tất nhập kho</span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-800 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span><?= htmlspecialchars($dp['trangThai']) ?></span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="py-4 px-6 text-center text-slate-500">Chưa tìm thấy lệnh điều phối nhập nguyên liệu nào.</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
-
-        <!-- Phân trang bảng lệnh điều phối nguyên liệu -->
-        <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
-            <div class="flex items-center gap-1.5">
-                <button type="button" disabled class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-300 bg-white cursor-not-allowed text-xs font-medium">
-                    <i class="fa-solid fa-chevron-left mr-1"></i>Trước
-                </button>
-                <button type="button" class="w-8 h-8 rounded-lg text-xs font-semibold flex items-center justify-center bg-amber-600 text-white shadow-sm cursor-default">
-                    1
-                </button>
-                <button type="button" class="w-8 h-8 rounded-lg text-xs font-semibold flex items-center justify-center border border-slate-300 text-slate-700 bg-white hover:bg-slate-100 cursor-default">
-                    2
-                </button>
-                <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-100 text-xs font-medium cursor-default">
-                    Sau<i class="fa-solid fa-chevron-right ml-1"></i>
-                </button>
-            </div>
-        </div>
     </div>
 
-    <!-- 2 Cột: Chi tiết phiếu nhập (7 cột) & Chọn vị trí kệ (5 cột) - 2 bảng nhìn ngang bằng nhau chuẩn xác -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+    <!-- 2 Cột: Chi tiết phiếu nhập & Chọn vị trí kệ -->
+    <form method="POST" action="index.php?page=vPhieuNhapNL" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? ($_SESSION['token'] ?? '') ?>">
+        <input type="hidden" name="action" value="luuPhieuNhap">
+        <input type="hidden" name="maLenhDieuPhoi" value="<?= htmlspecialchars($chiTiet['maLenhDieuPhoi'] ?? '') ?>">
+        <input type="hidden" name="soLuongPhanBo" value="<?= htmlspecialchars($chiTiet['soLuongPhanBo'] ?? 0) ?>">
+
         <!-- Cột Trái: Chi Tiết Phiếu Nhập Nguyên Liệu -->
         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
             <div>
@@ -104,60 +107,63 @@
                         <i class="fa-solid fa-file-invoice text-amber-600 text-lg"></i>
                         <h3 class="text-base font-bold text-slate-900 whitespace-nowrap">Chi Tiết Phiếu Nhập Nguyên Liệu</h3>
                     </div>
-                    <span class="px-2.5 py-1 rounded-md bg-slate-100 text-xs font-semibold text-slate-700 tracking-wider">PNK-NL-2610-001</span>
+                    <span class="px-2.5 py-1 rounded-md bg-slate-100 text-xs font-semibold text-slate-700 tracking-wider">
+                        PNK-NL-<?= date('ym') ?>-<?= str_pad(substr($chiTiet['maLenhDieuPhoi'] ?? '1', -3), 3, '0', STR_PAD_LEFT) ?>
+                    </span>
                 </div>
                 
-                <!-- Tất cả các trường thông tin: bố cục thanh lịch, dài xuống vừa phải -->
                 <div class="grid grid-cols-2 gap-x-5 gap-y-4 text-sm pt-3.5">
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Mã lệnh điều phối</span>
-                        <strong class="text-slate-900 mt-1 block whitespace-nowrap">LDP-NL-2610-01</strong>
+                        <strong class="text-slate-900 mt-1 block whitespace-nowrap"><?= htmlspecialchars($chiTiet['maLenhDieuPhoi'] ?? 'N/A') ?></strong>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Mã lô nguyên liệu</span>
-                        <strong class="text-slate-900 mt-1 block whitespace-nowrap">LONL20261021001</strong>
+                        <strong class="text-slate-900 mt-1 block whitespace-nowrap"><?= htmlspecialchars($chiTiet['maLo'] ?? 'N/A') ?></strong>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Tên nguyên liệu</span>
-                        <strong class="text-slate-900 mt-1 block truncate" title="Bột mì đa dụng thượng hạng số 8">Bột mì đa dụng thượng hạng số 8</strong>
+                        <strong class="text-slate-900 mt-1 block truncate" title="<?= htmlspecialchars($chiTiet['tenNL'] ?? '') ?>"><?= htmlspecialchars($chiTiet['tenNL'] ?? 'N/A') ?></strong>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Nhà cung cấp</span>
-                        <strong class="text-slate-900 mt-1 block truncate" title="Công ty CP Xay Lúa Mì Việt Nam">Công ty CP Xay Lúa Mì Việt Nam</strong>
+                        <strong class="text-slate-900 mt-1 block truncate" title="<?= htmlspecialchars($chiTiet['nhaCungCap'] ?? '') ?>"><?= htmlspecialchars($chiTiet['nhaCungCap'] ?? 'N/A') ?></strong>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Kho tiếp nhận</span>
-                        <strong class="text-slate-900 mt-1 block whitespace-nowrap">Kho Nguyên Liệu Khô 1</strong>
+                        <strong class="text-slate-900 mt-1 block whitespace-nowrap"><?= htmlspecialchars($chiTiet['tenKho'] ?? 'Kho Nguyên Liệu Khô 1') ?></strong>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Hạn sử dụng</span>
-                        <strong class="text-slate-900 mt-1 block whitespace-nowrap">20/10/2026 – 20/10/2027</strong>
+                        <strong class="text-slate-900 mt-1 block whitespace-nowrap"><?= isset($chiTiet['hanSuDung']) ? date('d/m/Y', strtotime($chiTiet['hanSuDung'])) : 'N/A' ?></strong>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Người điều phối</span>
-                        <strong class="text-slate-900 mt-1 block whitespace-nowrap">Trần Văn Sang</strong>
+                        <strong class="text-slate-900 mt-1 block whitespace-nowrap"><?= htmlspecialchars($chiTiet['tenNguoiDieuPhoi'] ?? 'Trần Văn Sang') ?></strong>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-xs whitespace-nowrap">Kiểm định chất lượng</span>
                         <div class="mt-1 flex items-center gap-2">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-800 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>Đạt</span>
+                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-800 whitespace-nowrap">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span><?= htmlspecialchars($chiTiet['ketQuaKiemDinh'] ?? 'Đạt') ?>
+                            </span>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-slate-600 mb-1.5 text-xs whitespace-nowrap">Số lượng yêu cầu</label>
-                        <input type="text" disabled value="5,000 Kg" 
+                        <label class="block text-slate-600 mb-1.5 text-xs whitespace-nowrap">Số lượng yêu cầu (Phân bổ)</label>
+                        <input type="text" disabled value="<?= number_format($chiTiet['soLuongPhanBo'] ?? 0, 0) ?> <?= htmlspecialchars($chiTiet['donViTinh'] ?? 'Kg') ?>" 
                             class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-semibold text-sm">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-medium mb-1.5 text-xs whitespace-nowrap">Số lượng thực nhập (Kg) (*)</label>
-                        <input type="number" value="5000" 
-                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 font-bold text-sm">
+                        <label class="block text-slate-700 font-medium mb-1.5 text-xs whitespace-nowrap">Số lượng thực nhập (<?= htmlspecialchars($chiTiet['donViTinh'] ?? 'Kg') ?>) (*)</label>
+                        <input type="number" step="0.01" name="slThucNhap" value="<?= htmlspecialchars($chiTiet['soLuongPhanBo'] ?? 0) ?>" required <?= $isDaHoanTat ? 'disabled' : '' ?>
+                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg <?= $isDaHoanTat ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900' ?> font-bold text-sm">
                     </div>
 
                     <div class="col-span-2">
                         <label class="block text-slate-700 font-medium mb-1.5 text-xs whitespace-nowrap">Ghi chú nhập kho</label>
-                        <input type="text" value="Hàng nguyên tem niêm phong, kiểm định đạt chuẩn 100%." 
-                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-800 text-sm">
+                        <input type="text" name="ghiChu" value="Hàng nguyên tem niêm phong, kiểm định đạt chuẩn 100%." <?= $isDaHoanTat ? 'disabled' : '' ?>
+                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg <?= $isDaHoanTat ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-800' ?> text-sm">
                     </div>
                 </div>
             </div>
@@ -173,109 +179,45 @@
                     </div>
                 </div>
 
-                <!-- Thanh Selection: Chọn Dãy • Kệ • Tầng • Nhấn nút Tìm kiếm -->
-                <div class="py-2.5 border-b border-slate-100 flex items-center gap-1.5">
-                    <div class="grid grid-cols-3 gap-1.5 flex-1">
-                        <select class="py-1 px-1.5 bg-slate-50 border border-slate-300 rounded text-slate-700 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                            <option value="">Tất cả dãy</option>
-                            <option value="A" selected>Dãy A</option>
-                            <option value="B">Dãy B</option>
-                        </select>
-                        <select class="py-1 px-1.5 bg-slate-50 border border-slate-300 rounded text-slate-700 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                            <option value="">Tất cả kệ</option>
-                            <option value="01">Kệ 01</option>
-                            <option value="02" selected>Kệ 02</option>
-                            <option value="03">Kệ 03</option>
-                        </select>
-                        <select class="py-1 px-1.5 bg-slate-50 border border-slate-300 rounded text-slate-700 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                            <option value="">Tất cả tầng</option>
-                            <option value="1" selected>Tầng 1</option>
-                            <option value="2">Tầng 2</option>
-                        </select>
-                    </div>
-                    <button type="button" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold flex items-center gap-1 shadow-sm cursor-default whitespace-nowrap">
-                        <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
-                        <span>Tìm</span>
-                    </button>
-                </div>
-
-                <!-- Danh sách kệ phân trang (4 vị trí / trang) -->
-                <div class="space-y-2 py-2 flex-1">
-                    <div class="px-3.5 py-2 rounded-lg border border-brand-600 bg-amber-50/50 shadow-sm flex items-center justify-between gap-3 cursor-pointer">
-                        <div class="min-w-0 flex-1">
-                            <div class="text-sm"><span class="font-bold text-slate-900">Dãy A • Kệ 02 • Tầng 1</span></div>
-                            <div class="text-xs text-slate-500 mt-0.5 whitespace-nowrap">Sức chứa khả dụng: 2,000 Kg</div>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0"></span>Trống</span>
-                            <i class="fa-solid fa-circle-check text-brand-600 text-lg"></i>
-                        </div>
-                    </div>
-
-                    <div class="px-3.5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer">
-                        <div class="min-w-0 flex-1">
-                            <div class="text-sm"><span class="font-bold text-slate-900">Dãy A • Kệ 03 • Tầng 1</span></div>
-                            <div class="text-xs text-slate-500 mt-0.5 whitespace-nowrap">Sức chứa khả dụng: 2,000 Kg</div>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0"></span>Trống</span>
-                            <i class="fa-regular fa-circle text-slate-300 text-lg"></i>
-                        </div>
-                    </div>
-
-                    <div class="px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50/70 opacity-60 flex items-center justify-between gap-3 cursor-not-allowed">
-                        <div class="min-w-0 flex-1">
-                            <div class="text-sm"><span class="font-bold text-slate-900">Dãy A • Kệ 01 • Tầng 1</span></div>
-                            <div class="text-xs text-slate-500 mt-0.5 whitespace-nowrap">Sức chứa khả dụng: 2,500 Kg</div>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0"></span>Đang chứa</span>
-                            <i class="fa-regular fa-circle text-slate-300 text-lg"></i>
-                        </div>
-                    </div>
-
-                    <div class="px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50/70 opacity-60 flex items-center justify-between gap-3 cursor-not-allowed">
-                        <div class="min-w-0 flex-1">
-                            <div class="text-sm"><span class="font-bold text-slate-900">Dãy B • Kệ 01 • Tầng 2</span></div>
-                            <div class="text-xs text-slate-500 mt-0.5 whitespace-nowrap">Sức chứa khả dụng: 0 Kg</div>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0"></span>Đầy</span>
-                            <i class="fa-regular fa-circle text-slate-300 text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Thanh phân trang vị trí kệ -->
-                <div class="pt-2 pb-1 border-t border-slate-100 flex items-center justify-end text-xs text-slate-500">
-                    <div class="flex items-center gap-1.5">
-                        <button type="button" disabled class="px-2 py-1 rounded border border-slate-200 text-slate-300 bg-white cursor-not-allowed text-[11px] font-medium">
-                            <i class="fa-solid fa-chevron-left"></i>
-                        </button>
-                        <button type="button" class="w-6 h-6 rounded text-[11px] font-semibold flex items-center justify-center bg-amber-600 text-white shadow-sm cursor-default">
-                            1
-                        </button>
-                        <button type="button" class="w-6 h-6 rounded text-[11px] font-semibold flex items-center justify-center border border-slate-300 text-slate-700 bg-white hover:bg-slate-100 cursor-default">
-                            2
-                        </button>
-                        <button type="button" class="px-2 py-1 rounded border border-slate-300 text-slate-700 bg-white hover:bg-slate-100 text-[11px] font-medium cursor-default">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                    </div>
+                <div class="space-y-2 py-3 flex-1 overflow-y-auto max-h-[320px]">
+                    <?php if (!empty($dsViTri)): ?>
+                        <?php foreach ($dsViTri as $idx => $vt): ?>
+                            <label class="px-3.5 py-2.5 rounded-lg border border-slate-200 <?= $isDaHoanTat ? 'opacity-60 cursor-not-allowed' : 'hover:border-amber-500 hover:bg-amber-50/40 cursor-pointer' ?> flex items-center justify-between gap-3 transition-all">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-sm"><span class="font-bold text-slate-900">Mã vị trí: <?= htmlspecialchars($vt['maViTri']) ?></span></div>
+                                    <div class="text-xs text-slate-500 mt-0.5 whitespace-nowrap">Dãy <?= htmlspecialchars($vt['day']) ?> • Kệ <?= htmlspecialchars($vt['ke']) ?> • Tầng <?= htmlspecialchars($vt['tang']) ?> | Sức chứa: <?= number_format($vt['sucChuaKhaDung'] ?? 600) ?> Kg</div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <input type="radio" name="maViTri" value="<?= htmlspecialchars($vt['maViTri']) ?>" <?= $idx === 0 ? 'checked' : '' ?> <?= $isDaHoanTat ? 'disabled' : '' ?> class="w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300">
+                                </div>
+                            </label>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="p-4 text-center text-xs text-slate-500 border border-dashed rounded-lg">Không tìm thấy vị trí kệ trống phù hợp trong kho chỉ định.</div>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <!-- 2 Nút thao tác ở đáy: Kéo xích lên ngang bằng đáy bảng bên trái -->
+            <!-- Nút thao tác -->
             <div class="pt-4 border-t border-slate-200 flex items-center justify-end gap-3 mt-2">
-                <button type="button" class="px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                <button type="button" onclick="window.print()" class="px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium flex items-center gap-2 whitespace-nowrap cursor-pointer">
                     <i class="fa-solid fa-print"></i>
                     <span>In phiếu</span>
                 </button>
-                <button type="button" class="px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap bg-amber-600 hover:bg-amber-700 text-white shadow-sm cursor-pointer">
-                    <i class="fa-solid fa-check"></i>
-                    <span>Lưu phiếu nhập kho</span>
-                </button>
+
+                <!--  ĐỔI NÚT LƯU PHIẾU THÀNH TRẠNG THÁI VÔ HIỆU HÓA KHI ĐÃ HOÀN TẤT -->
+                <?php if ($isDaHoanTat): ?>
+                    <button type="button" disabled class="px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap bg-slate-300 text-slate-600 cursor-not-allowed shadow-none">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Đã hoàn tất nhập kho</span>
+                    </button>
+                <?php else: ?>
+                    <button type="submit" class="px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap bg-amber-600 hover:bg-amber-700 text-white shadow-sm cursor-pointer">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Lưu phiếu nhập kho</span>
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
-    </div>
+    </form>
 </div>
